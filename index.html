@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Temporal Specification Guidance (TSG): training-free temporal control for text-to-video generation. Video examples comparing CFG and TSG.">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Temporal Specification Guidance for Text-to-Video Generation</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="bulma.min.css">
+  <link rel="stylesheet" href="site.css">
+  <script src="site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#examples">Skip to video examples</a>
+
+  <header class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop has-text-centered">
+        <h1 class="title is-1 publication-title">Temporal Specification Guidance<br class="title-break"> for Text-to-Video Generation</h1>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section abstract-section" aria-labelledby="abstract-title">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column is-four-fifths">
+            <h2 id="abstract-title" class="title is-3 has-text-centered">Abstract</h2>
+            <div class="content abstract-text">
+              <p>Text-to-video models often generate the visual concepts requested in natural language prompts but fail to satisfy their intended ordering, timing, and persistence requirements. We propose representing these requirements as specifications in a formal Temporal Logic, and introduce <strong>Temporal Specification Guidance (TSG)</strong>, a training-free inference-time framework that turns temporal specifications into executable objectives for guiding video generation during sampling. TSG scores traces of visual concept evidence using differentiable quantitative semantics and uses the score’s gradients to construct a specification-guided denoising direction. We instantiate this framework with video–text attention traces, efficient differentiable scores for Metric Temporal Logic, and gradient-derived attention biases. This instantiation requires neither an external concept classifier nor backpropagation through the video transformer. Its attention-steered forward pass yields a denoising direction that augments classifier-free guidance (CFG).</p>
+              <p>On a benchmark of 220 prompts spanning 11 categories of temporal constraints, including ordered object entry and state transitions, this instantiation improves specification satisfaction accuracy over CFG by 9.5–20 percentage points across five models, with minimal memory overhead. These results demonstrate the potential of temporal specifications and differentiable satisfaction objectives as a flexible interface for controlling video generation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="examples" class="section examples-section">
+      <div class="container examples-container">
+        <div class="examples-intro has-text-centered">
+          <nav class="examples-nav" aria-label="Video example sections">
+            <a href="#temporal-control-comparison">Temporal control methods</a>
+            <a href="#cfg-comparison">Comparison with CFG</a>
+            <a href="#representative-failures">Representative failures</a>
+            <a href="#other-examples">Other examples</a>
+          </nav>
+          <p class="playback-hint">Use <strong>Play all</strong> or <strong>Play both</strong> to watch a comparison together, or control each video individually.</p>
+        </div>
+
+        <section id="temporal-control-comparison" class="example-section" aria-labelledby="temporal-control-comparison-title">
+          <h2 id="temporal-control-comparison-title" class="title is-3 has-text-centered">Comparison with other methods for temporal control</h2>
+          <article class="example" id="vehicle-entry-comparison" aria-labelledby="vehicle-entry-comparison-title">
+            <div class="example-heading">
+              <h3 id="vehicle-entry-comparison-title" class="title is-4">Three ordered entries</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A parked car occupies a curbside view by itself at first. Near the one-third point, a cyclist rides a bicycle into frame and stops by the curb while the car remains. As the last third begins, a motorcycle arrives and parks in the same continuous street view. The car, bicycle, and motorcycle stay visible through the end.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison comparison--methods">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg"><span>Classifier-free Guidance (CFG)</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: Classifier-free Guidance (CFG) video">
+                  <source src="vehicle-entry-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tempocontrol"><span>TempoControl</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: TempoControl video">
+                  <source src="vehicle-entry-tempocontrol.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label ts-attn"><span>TS-Attn</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: TS-Attn video">
+                  <source src="vehicle-entry-ts-attn.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label switchcraft"><span>SwitchCraft</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: SwitchCraft video">
+                  <source src="vehicle-entry-switchcraft.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg tsg-revised"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: Temporal Specification Guidance (TSG) video">
+                  <source src="vehicle-entry-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Three ordered entries, all five methods">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play all</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="tabletop-entry-comparison" aria-labelledby="tabletop-entry-comparison-title">
+            <div class="example-heading">
+              <h3 id="tabletop-entry-comparison-title" class="title is-4">Three ordered entries</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>An open book lies alone on a large reading table beneath a fixed overhead camera. Near the end of the first third, a ceramic mug is set beside it and both objects remain. At about the two-thirds mark, a red apple is placed in the remaining open space. The book, mug, and apple stay together through the end of the shot.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison comparison--methods">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg"><span>Classifier-free Guidance (CFG)</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: Classifier-free Guidance (CFG) video">
+                  <source src="tabletop-entry-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tempocontrol"><span>TempoControl</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: TempoControl video">
+                  <source src="tabletop-entry-tempocontrol.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label ts-attn"><span>TS-Attn</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: TS-Attn video">
+                  <source src="tabletop-entry-ts-attn.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label switchcraft"><span>SwitchCraft</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: SwitchCraft video">
+                  <source src="tabletop-entry-switchcraft.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg tsg-revised"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: Temporal Specification Guidance (TSG) video">
+                  <source src="tabletop-entry-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Three ordered entries, all five methods">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play all</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="anchored-choice-comparison" aria-labelledby="anchored-choice-comparison-title">
+            <div class="example-heading">
+              <h3 id="anchored-choice-comparison-title" class="title is-4">Anchored entity choice</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A candle remains alone on a wooden table throughout the opening third of a continuous close view. During the middle third, either a large ceramic cup or a teapot is set on the table, never both. The chosen item remains clearly separated from the candle throughout the final third.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison comparison--methods">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg"><span>Classifier-free Guidance (CFG)</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Anchored entity choice: Classifier-free Guidance (CFG) video">
+                  <source src="anchored-choice-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tempocontrol"><span>TempoControl</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Anchored entity choice: TempoControl video">
+                  <source src="anchored-choice-tempocontrol.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label ts-attn"><span>TS-Attn</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Anchored entity choice: TS-Attn video">
+                  <source src="anchored-choice-ts-attn.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label switchcraft"><span>SwitchCraft</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Anchored entity choice: SwitchCraft video">
+                  <source src="anchored-choice-switchcraft.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg tsg-revised"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Anchored entity choice: Temporal Specification Guidance (TSG) video">
+                  <source src="anchored-choice-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Anchored entity choice, all five methods">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play all</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="beach-transition-comparison" aria-labelledby="beach-transition-comparison-title">
+            <div class="example-heading">
+              <h3 id="beach-transition-comparison-title" class="title is-4">Three-state transition</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A tranquil beach appears in one continuous view from a fixed camera. Clear daytime lasts for roughly the first third of the video. About one-third of the way through, the light gradually warms as the sun approaches the horizon and the sky becomes an orange sunset. Around two-thirds of the way through, the sunset fades into a dark blue night sky over the same shoreline, which remains visible through the end. The camera view stays continuous, with no cuts, split screens, stacked views, or duplicate horizons.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison comparison--methods">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg"><span>Classifier-free Guidance (CFG)</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three-state transition: Classifier-free Guidance (CFG) video">
+                  <source src="beach-transition-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tempocontrol"><span>TempoControl</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three-state transition: TempoControl video">
+                  <source src="beach-transition-tempocontrol.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label ts-attn"><span>TS-Attn</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three-state transition: TS-Attn video">
+                  <source src="beach-transition-ts-attn.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label switchcraft"><span>SwitchCraft</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three-state transition: SwitchCraft video">
+                  <source src="beach-transition-switchcraft.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg tsg-revised"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Three-state transition: Temporal Specification Guidance (TSG) video">
+                  <source src="beach-transition-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Three-state transition, all five methods">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play all</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="mountain-final-state-comparison" aria-labelledby="mountain-final-state-comparison-title">
+            <div class="example-heading">
+              <h3 id="mountain-final-state-comparison-title" class="title is-4">Alternative final state</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A single mountain landscape remains in clear daytime through the opening third of a locked wide shot. During the middle third, it progresses to either a warm sunset behind the same mountain or a dark nighttime view of the same silhouette, showing only one final condition. That condition is established by the final third and lasts to the end.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison comparison--methods">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg"><span>Classifier-free Guidance (CFG)</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Alternative final state: Classifier-free Guidance (CFG) video">
+                  <source src="mountain-final-state-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tempocontrol"><span>TempoControl</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Alternative final state: TempoControl video">
+                  <source src="mountain-final-state-tempocontrol.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label ts-attn"><span>TS-Attn</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Alternative final state: TS-Attn video">
+                  <source src="mountain-final-state-ts-attn.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label switchcraft"><span>SwitchCraft</span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Alternative final state: SwitchCraft video">
+                  <source src="mountain-final-state-switchcraft.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg tsg-revised"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Alternative final state: Temporal Specification Guidance (TSG) video">
+                  <source src="mountain-final-state-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Alternative final state, all five methods">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play all</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+        </section>
+
+        <section id="cfg-comparison" class="example-section" aria-labelledby="cfg-comparison-title">
+          <h2 id="cfg-comparison-title" class="title is-3 has-text-centered">Comparison with CFG</h2>
+          <article class="example" id="traffic-light" aria-labelledby="traffic-light-title">
+            <div class="example-heading">
+              <h3 id="traffic-light-title" class="title is-4">Three-state transition</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A cinematic, photorealistic 4k close-up of a street traffic light at dusk, captured from a fixed tripod camera. The light starts on solid yellow. Then it changes to red. After that, it changes to green and stays stable. No camera movement, no scene cuts, no extra light state flicker. Urban background bokeh, realistic reflections, high detail.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> CogVideoX-5B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">Classifier-free Guidance (CFG)</figcaption>
+                <video controls muted playsinline preload="metadata" poster="traffic-light-cfg.png" aria-label="Three-state transition: CFG video">
+                  <source src="traffic-light-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" poster="traffic-light-tsg.png" aria-label="Three-state transition: TSG video">
+                  <source src="traffic-light-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Three-state transition">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="drone" aria-labelledby="drone-title">
+            <div class="example-heading">
+              <h3 id="drone-title" class="title is-4">Anchored entity choice</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A fixed aerial shot shows a surveillance drone steadily patrolling a rugged mountain valley. The drone remains visible throughout the clip as it scans the terrain below. Midway through the video, the drone spots either a flare signal or a stranded hiker. Cinematic daylight, realistic motion, no cuts.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> CogVideoX-5B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">Classifier-free Guidance (CFG)</figcaption>
+                <video controls muted playsinline preload="metadata" poster="drone-cfg.png" aria-label="Anchored entity choice: CFG video">
+                  <source src="drone-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" poster="drone-tsg.png" aria-label="Anchored entity choice: TSG video">
+                  <source src="drone-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Anchored entity choice">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="candle-cup-teapot" aria-labelledby="candle-cup-teapot-title">
+            <div class="example-heading">
+              <h3 id="candle-cup-teapot-title" class="title is-4">Three ordered entries</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A candle rests alone on a broad wooden table for the opening portion of a fixed close view. Around one-third of the way through, a ceramic cup is placed beside the candle. As the final third begins, a teapot is set down in the remaining space. The candle, cup, and teapot all remain visible for the rest of the video.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">Classifier-free Guidance (CFG)</figcaption>
+                <video controls muted playsinline preload="metadata" poster="candle-cup-teapot-cfg.png" aria-label="Three ordered entries: CFG video">
+                  <source src="candle-cup-teapot-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" poster="candle-cup-teapot-tsg.png" aria-label="Three ordered entries: TSG video">
+                  <source src="candle-cup-teapot-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Three ordered entries">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="beach-day-sunset-night" aria-labelledby="beach-day-sunset-night-title">
+            <div class="example-heading">
+              <h3 id="beach-day-sunset-night-title" class="title is-4">Three-state transition</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A tranquil beach appears in one continuous view from a fixed camera. Clear daytime lasts for roughly the first third of the video. About one-third of the way through, the light gradually warms as the sun approaches the horizon and the sky becomes an orange sunset. Around two-thirds of the way through, the sunset fades into a dark blue night sky over the same shoreline, which remains visible through the end. The camera view stays continuous, with no cuts, split screens, stacked views, or duplicate horizons.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">Classifier-free Guidance (CFG)</figcaption>
+                <video controls muted playsinline preload="metadata" poster="beach-day-sunset-night-cfg.png" aria-label="Three-state transition: CFG video">
+                  <source src="beach-day-sunset-night-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" poster="beach-day-sunset-night-tsg.png" aria-label="Three-state transition: TSG video">
+                  <source src="beach-day-sunset-night-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Three-state transition">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="apple-to-banana" aria-labelledby="apple-to-banana-title">
+            <div class="example-heading">
+              <h3 id="apple-to-banana-title" class="title is-4">Overlapping handover</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>One red apple sits at the center of a small cutting board. About one-third of the way through, a yellow banana is placed beside it so that the two fruits share the close overhead view. As the video reaches its final third, the apple is taken off the board, while the banana remains centered until the end. No other fruit appears.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.2-TI2V-5B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">Classifier-free Guidance (CFG)</figcaption>
+                <video controls muted playsinline preload="metadata" poster="apple-to-banana-cfg.png" aria-label="Overlapping handover: CFG video">
+                  <source src="apple-to-banana-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" poster="apple-to-banana-tsg.png" aria-label="Overlapping handover: TSG video">
+                  <source src="apple-to-banana-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Overlapping handover">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="spg-method" aria-labelledby="spg-method-title">
+            <div class="example-heading">
+              <h3 id="spg-method-title" class="title is-4">Three-state transition</h3>
+            </div>
+            <div class="prompt-box" aria-label="Illustrative sequence">
+              <p><strong>Illustrative sequence:</strong> A dog stands, then sits, then lies down.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.2-5B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">Classifier-free Guidance (CFG)</figcaption>
+                <video controls muted playsinline preload="metadata" poster="spg-method-cfg.png" aria-label="Three-state transition: CFG video">
+                  <source src="spg-method-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" poster="spg-method-tsg.png" aria-label="Three-state transition: TSG video">
+                  <source src="spg-method-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Three-state transition">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+
+          <article class="example" id="rabbit-exit-return" aria-labelledby="rabbit-exit-return-title">
+            <div class="example-heading">
+              <h3 id="rabbit-exit-return-title" class="title is-4">Entity exit and re-entry</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A rabbit is visible near the center of an open lawn. Around a third of the way into the video, it hops beyond the right edge, leaving the lawn empty. Near the start of the last third, the same rabbit hops back in from that side and stays on the grass. The continuous shot contains only one rabbit.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.2-5B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">Classifier-free Guidance (CFG)</figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Entity exit and re-entry: CFG video">
+                  <source src="rabbit-exit-return-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg"><span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span></figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Entity exit and re-entry: TSG video">
+                  <source src="rabbit-exit-return-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Entity exit and re-entry">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+        </section>
+
+        <section id="representative-failures" class="example-section" aria-labelledby="representative-failures-title">
+          <h2 id="representative-failures-title" class="title is-3 has-text-centered">Representative failures</h2>
+          <h3 id="quality" class="title is-4">Examples of degraded visual quality with TSG</h3>
+          <p class="quality-intro">Improved temporal adherence with TSG can come with visual artifacts and other quality trade-offs, as the examples below illustrate.</p>
+          <article class="example" id="quality-truck-teddy-handover" aria-labelledby="quality-truck-teddy-handover-title">
+            <div class="example-heading">
+              <h4 id="quality-truck-teddy-handover-title" class="title is-4">Excessive flicker</h4>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A colorful toy truck sits alone on a playroom rug. Near the end of the first third, a teddy bear is set upright beside the truck and both toys remain together. At around two-thirds of the way through, the truck is lifted from the rug and removed from frame. The teddy bear remains in the same continuous close shot.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">
+                  <span>Classifier-free Guidance (CFG)</span>
+                </figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Toy truck to teddy bear: CFG video">
+                  <source src="quality-truck-teddy-handover-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg">
+                  <span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span>
+                </figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Toy truck to teddy bear: TSG video">
+                  <source src="quality-truck-teddy-handover-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Toy truck to teddy bear">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+            <table class="table is-narrow quality-metrics">
+              <caption>VBench quality scores</caption>
+              <thead>
+                <tr><th scope="col">Metric</th><th scope="col">CFG</th><th scope="col">TSG</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Subject consistency</th><td>89.49</td><td>80.30</td></tr>
+                <tr><th scope="row">Background consistency</th><td>90.92</td><td>88.88</td></tr>
+                <tr><th scope="row">Aesthetic quality</th><td>58.18</td><td>54.52</td></tr>
+                <tr class="imaging-quality-row"><th scope="row">Imaging quality</th><td>74.72</td><td>69.99</td></tr>
+                <tr><th scope="row">Temporal flickering</th><td>96.72</td><td>90.09</td></tr>
+                <tr><th scope="row">Motion smoothness</th><td>98.19</td><td>90.83</td></tr>
+                <tr><th scope="row">Dynamic degree</th><td>100.00</td><td>100.00</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="example" id="quality-lake-freezing" aria-labelledby="quality-lake-freezing-title">
+            <div class="example-heading">
+              <h4 id="quality-lake-freezing-title" class="title is-4">Visual artifacts</h4>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A calm open-water lake fills a fixed wide view during the first half. Around the midpoint, ice spreads across the same lake until it is visibly frozen, and the frozen surface remains through the final frame. The shoreline stays unchanged.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">
+                  <span>Classifier-free Guidance (CFG)</span>
+                </figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Lake freezing: CFG video">
+                  <source src="quality-lake-freezing-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg">
+                  <span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span>
+                </figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Lake freezing: TSG video">
+                  <source src="quality-lake-freezing-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Lake freezing">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+            <table class="table is-narrow quality-metrics">
+              <caption>VBench quality scores</caption>
+              <thead>
+                <tr><th scope="col">Metric</th><th scope="col">CFG</th><th scope="col">TSG</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Subject consistency</th><td>99.81</td><td>87.15</td></tr>
+                <tr><th scope="row">Background consistency</th><td>98.48</td><td>96.07</td></tr>
+                <tr><th scope="row">Aesthetic quality</th><td>44.52</td><td>39.89</td></tr>
+                <tr class="imaging-quality-row"><th scope="row">Imaging quality</th><td>64.51</td><td>36.21</td></tr>
+                <tr><th scope="row">Temporal flickering</th><td>99.89</td><td>97.93</td></tr>
+                <tr><th scope="row">Motion smoothness</th><td>99.74</td><td>98.06</td></tr>
+                <tr><th scope="row">Dynamic degree</th><td>0.00</td><td>100.00</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <article class="example" id="quality-sky-state-return" aria-labelledby="quality-sky-state-return-title">
+            <div class="example-heading">
+              <h4 id="quality-sky-state-return-title" class="title is-4">Abrupt transitions</h4>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A wide locked landscape begins beneath a clear blue sky. After approximately the first third, a bank of gray clouds spreads across the same sky until it is cloudy. Near the start of the final third, the clouds pass and reveal a clear sky again. The landscape and viewpoint remain continuous without split panels.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.2-TI2V-5B</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label cfg">
+                  <span>Classifier-free Guidance (CFG)</span>
+                </figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Clear sky, clouds, and clearing: CFG video">
+                  <source src="quality-sky-state-return-cfg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg">
+                  <span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span>
+                </figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Clear sky, clouds, and clearing: TSG video">
+                  <source src="quality-sky-state-return-tsg.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for Clear sky, clouds, and clearing">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+            <table class="table is-narrow quality-metrics">
+              <caption>VBench quality scores</caption>
+              <thead>
+                <tr><th scope="col">Metric</th><th scope="col">CFG</th><th scope="col">TSG</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">Subject consistency</th><td>99.18</td><td>92.05</td></tr>
+                <tr><th scope="row">Background consistency</th><td>98.28</td><td>95.67</td></tr>
+                <tr><th scope="row">Aesthetic quality</th><td>52.91</td><td>41.95</td></tr>
+                <tr class="imaging-quality-row"><th scope="row">Imaging quality</th><td>66.18</td><td>51.29</td></tr>
+                <tr><th scope="row">Temporal flickering</th><td>99.80</td><td>98.79</td></tr>
+                <tr><th scope="row">Motion smoothness</th><td>99.68</td><td>99.16</td></tr>
+                <tr><th scope="row">Dynamic degree</th><td>0.00</td><td>100.00</td></tr>
+              </tbody>
+            </table>
+          </article>
+
+          <section aria-labelledby="coordination-failures">
+            <h3 id="coordination-failures" class="title is-4">Examples of failed multi-entity coordination</h3>
+            <p class="quality-intro">These pairs show where TSG misses a required state change or handover. TempoControl satisfies the same temporal specification in each pair.</p>
+            <article class="example" id="coordination-bottle" aria-labelledby="coordination-bottle-title">
+              <div class="example-heading">
+                <h4 id="coordination-bottle-title" class="title is-4">Missed state change with a persistent entity</h4>
+              </div>
+              <div class="prompt-box" aria-label="Generation prompt">
+                <p>One cup stands beside an upright bottle on a low table in a steady close-up. The cup stays in place and remains visible throughout. Near the halfway point, the bottle is tipped onto its side and remains lying down next to the cup. No other tableware appears.</p>
+              </div>
+              <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+              <div class="comparison">
+                <figure class="video-panel">
+                  <figcaption class="video-label">
+                    <span>TempoControl</span>
+                  </figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Cup and bottle: TempoControl video">
+                    <source src="coordination-bottle-tempocontrol.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg">
+                    <span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span>
+                  </figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Cup and bottle: TSG video">
+                    <source src="coordination-bottle-tsg.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+              </div>
+              <div class="playback-controls" role="group" aria-label="Playback for Cup and bottle">
+                <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+                <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+                <span class="playback-status" role="status" aria-live="polite"></span>
+              </div>
+            </article>
+
+            <article class="example" id="coordination-canvas" aria-labelledby="coordination-canvas-title">
+              <div class="example-heading">
+                <h4 id="coordination-canvas-title" class="title is-4">Trigger without a response</h4>
+              </div>
+              <div class="prompt-box" aria-label="Generation prompt">
+                <p>A plain canvas stands alone on a small easel in a fixed studio close-up. About one-third of the way through, a broad paintbrush is placed against the still-plain canvas. Near the beginning of the final third, colorful paint covers the same surface, leaving a painted canvas while the paintbrush remains beside it. The easel and camera position stay unchanged.</p>
+              </div>
+              <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+              <div class="comparison">
+                <figure class="video-panel">
+                  <figcaption class="video-label">
+                    <span>TempoControl</span>
+                  </figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Paintbrush and canvas: TempoControl video">
+                    <source src="coordination-canvas-tempocontrol.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg">
+                    <span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span>
+                  </figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Paintbrush and canvas: TSG video">
+                    <source src="coordination-canvas-tsg.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+              </div>
+              <div class="playback-controls" role="group" aria-label="Playback for Paintbrush and canvas">
+                <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+                <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+                <span class="playback-status" role="status" aria-live="polite"></span>
+              </div>
+            </article>
+
+            <article class="example" id="coordination-handover" aria-labelledby="coordination-handover-title">
+              <div class="example-heading">
+                <h4 id="coordination-handover-title" class="title is-4">Outgoing entity stays visible</h4>
+              </div>
+              <div class="prompt-box" aria-label="Generation prompt">
+                <p>A cow grazes alone near the center of a fenced pasture. Near the one-third mark, a sheep enters through the side of the frame and joins it on the grass. Around two-thirds of the way through, the cow walks beyond the edge of the shot, leaving the sheep grazing in the pasture. The view remains continuous and unobstructed.</p>
+              </div>
+              <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+              <div class="comparison">
+                <figure class="video-panel">
+                  <figcaption class="video-label">
+                    <span>TempoControl</span>
+                  </figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Cow and sheep handover: TempoControl video">
+                    <source src="coordination-handover-tempocontrol.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg">
+                    <span>Temporal Specification Guidance (TSG) <span class="ours-marker" role="img" aria-label="Our method">★</span></span>
+                  </figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Cow and sheep handover: TSG video">
+                    <source src="coordination-handover-tsg.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+              </div>
+              <div class="playback-controls" role="group" aria-label="Playback for Cow and sheep handover">
+                <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+                <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+                <span class="playback-status" role="status" aria-live="polite"></span>
+              </div>
+            </article>
+          </section>
+        </section>
+
+        <section id="other-examples" class="example-section" aria-labelledby="other-examples-title">
+          <h2 id="other-examples-title" class="title is-3 has-text-centered">Other examples</h2>
+          <article class="example" id="bicycle-entry-fixed-vs-flexible" aria-labelledby="bicycle-entry-fixed-vs-flexible-title">
+            <div class="example-heading">
+              <h3 id="bicycle-entry-fixed-vs-flexible-title" class="title is-4">Fixed trace and flexible timing</h3>
+            </div>
+            <div class="prompt-box" aria-label="Generation prompt">
+              <p>A parked car occupies a curbside view by itself at first. Near the one-third point, a cyclist rides a bicycle into frame and stops by the curb while the car remains. As the last third begins, a motorcycle arrives and parks in the same continuous street view. The car, bicycle, and motorcycle stay visible through the end.</p>
+            </div>
+            <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+            <p class="quality-intro">The fixed trace steers the bicycle to be visible throughout the middle third (about 1.67–3.33 s). The temporal specification allows any continuous 0.5-second span within that interval with the car and bicycle visible and the motorcycle absent. In the fixed-trace clip, the bicycle disappears behind the car during the middle third.</p>
+            <div class="comparison">
+              <figure class="video-panel">
+                <figcaption class="video-label">
+                  <span>TSG with a fixed trace (fails)</span>
+                </figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Ordered bicycle entry with a fixed trace">
+                  <source src="bicycle-entry-fixed-trace.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+              <figure class="video-panel">
+                <figcaption class="video-label tsg">
+                  <span>TSG with a temporal specification (passes)</span>
+                </figcaption>
+                <video controls muted playsinline preload="metadata" aria-label="Ordered bicycle entry with a temporal specification">
+                  <source src="bicycle-entry-specification.mp4" type="video/mp4">
+                  Your browser does not support embedded video.
+                </video>
+              </figure>
+            </div>
+            <div class="playback-controls" role="group" aria-label="Playback for fixed trace and flexible timing">
+              <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+              <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+              <span class="playback-status" role="status" aria-live="polite"></span>
+            </div>
+          </article>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container has-text-centered">
+      <p>Website adapted from the <a href="https://nerfies.github.io/" rel="noreferrer">NeRFies</a> template, under <a href="https://creativecommons.org/licenses/by-sa/4.0/" rel="license noreferrer">CC BY-SA 4.0</a>.</p>
+    </div>
+  </footer>
+</body>
+</html>
