@@ -835,6 +835,150 @@
               <span class="playback-status" role="status" aria-live="polite"></span>
             </div>
           </article>
+
+          <section id="attention-head-selection" class="example-section" aria-labelledby="attention-head-selection-title">
+            <h3 id="attention-head-selection-title" class="title is-4">Attention head selection</h3>
+            <p class="quality-intro">Selecting the top 25% heads by scores for steering retains the specification satisfaction accuracy achieved on steering all heads. We do not find any significant improvements in visual quality.</p>
+            <p class="quality-intro">Both settings achieve 52% specification satisfaction accuracy on the same 25 prompts using Wan 2.1-T2V-1.3B.</p>
+            <article class="example" id="head-selection-robot" aria-labelledby="head-selection-robot-title">
+              <div class="example-heading">
+                <h4 id="head-selection-robot-title" class="title is-4">Reversible state return: robot</h4>
+              </div>
+              <div class="prompt-box" aria-label="Generation prompt">
+                <p>A humanoid robot begins standing at the center of a plain studio floor. About one-third of the way through, it bends its joints and sits on a low platform. Near the two-thirds point, the robot rises from the platform and stands again. A fixed full-body shot keeps the same robot visible through the end.</p>
+              </div>
+              <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+              <div class="comparison">
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg"><span>All heads</span></figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Reversible state return: robot: TSG with all heads">
+                    <source src="head-selection-robot-all-heads.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg"><span>Top 25% of heads</span></figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Reversible state return: robot: TSG with top 25% of heads">
+                    <source src="head-selection-robot-top-25.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+              </div>
+              <div class="playback-controls" role="group" aria-label="Playback for Reversible state return: robot head selection">
+                <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+                <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+                <span class="playback-status" role="status" aria-live="polite"></span>
+              </div>
+              <table class="table is-narrow quality-metrics">
+                <caption>VBench quality scores</caption>
+                <thead>
+                  <tr><th scope="col">Metric</th><th scope="col">All heads</th><th scope="col">Top 25%</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">Subject consistency</th><td><strong>89.49</strong></td><td>88.22</td></tr>
+                  <tr><th scope="row">Background consistency</th><td><strong>95.76</strong></td><td>91.35</td></tr>
+                  <tr><th scope="row">Aesthetic quality</th><td><strong>60.68</strong></td><td>59.13</td></tr>
+                  <tr class="imaging-quality-row"><th scope="row">Imaging quality</th><td>73.27</td><td><strong>75.07</strong></td></tr>
+                  <tr><th scope="row">Temporal flickering</th><td><strong>98.70</strong></td><td>97.92</td></tr>
+                  <tr><th scope="row">Motion smoothness</th><td><strong>99.13</strong></td><td>98.80</td></tr>
+                  <tr><th scope="row">Dynamic degree</th><td>100.00</td><td>100.00</td></tr>
+                </tbody>
+              </table>
+            </article>
+
+            <article class="example" id="head-selection-vehicles" aria-labelledby="head-selection-vehicles-title">
+              <div class="example-heading">
+                <h4 id="head-selection-vehicles-title" class="title is-4">Three ordered entries: car, bicycle, motorcycle</h4>
+              </div>
+              <div class="prompt-box" aria-label="Generation prompt">
+                <p>A parked car occupies a curbside view by itself at first. Near the one-third point, a cyclist rides a bicycle into frame and stops by the curb while the car remains. As the last third begins, a motorcycle arrives and parks in the same continuous street view. The car, bicycle, and motorcycle stay visible through the end.</p>
+              </div>
+              <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+              <div class="comparison">
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg"><span>All heads</span></figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: car, bicycle, motorcycle: TSG with all heads">
+                    <source src="head-selection-vehicles-all-heads.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg"><span>Top 25% of heads</span></figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: car, bicycle, motorcycle: TSG with top 25% of heads">
+                    <source src="head-selection-vehicles-top-25.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+              </div>
+              <div class="playback-controls" role="group" aria-label="Playback for Three ordered entries: car, bicycle, motorcycle head selection">
+                <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+                <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+                <span class="playback-status" role="status" aria-live="polite"></span>
+              </div>
+              <table class="table is-narrow quality-metrics">
+                <caption>VBench quality scores</caption>
+                <thead>
+                  <tr><th scope="col">Metric</th><th scope="col">All heads</th><th scope="col">Top 25%</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">Subject consistency</th><td>94.00</td><td><strong>94.58</strong></td></tr>
+                  <tr><th scope="row">Background consistency</th><td>95.31</td><td><strong>95.40</strong></td></tr>
+                  <tr><th scope="row">Aesthetic quality</th><td><strong>49.72</strong></td><td>47.86</td></tr>
+                  <tr class="imaging-quality-row"><th scope="row">Imaging quality</th><td><strong>65.00</strong></td><td>64.94</td></tr>
+                  <tr><th scope="row">Temporal flickering</th><td>98.97</td><td><strong>99.09</strong></td></tr>
+                  <tr><th scope="row">Motion smoothness</th><td><strong>99.36</strong></td><td>99.25</td></tr>
+                  <tr><th scope="row">Dynamic degree</th><td>100.00</td><td>100.00</td></tr>
+                </tbody>
+              </table>
+            </article>
+
+            <article class="example" id="head-selection-animals" aria-labelledby="head-selection-animals-title">
+              <div class="example-heading">
+                <h4 id="head-selection-animals-title" class="title is-4">Three ordered entries: horse, cow, sheep</h4>
+              </div>
+              <div class="prompt-box" aria-label="Generation prompt">
+                <p>A horse grazes alone in a quiet pasture at the start of a steady wide view. Near the one-third mark, a cow walks in through the field gate and begins grazing while the horse remains. As the final third begins, a sheep enters through the same gate. All three animals stay in the pasture for the rest of the continuous shot.</p>
+              </div>
+              <p class="model-name"><strong>Model:</strong> Wan 2.1-T2V-1.3B</p>
+              <div class="comparison">
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg"><span>All heads</span></figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: horse, cow, sheep: TSG with all heads">
+                    <source src="head-selection-animals-all-heads.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+                <figure class="video-panel">
+                  <figcaption class="video-label tsg"><span>Top 25% of heads</span></figcaption>
+                  <video controls muted playsinline preload="metadata" aria-label="Three ordered entries: horse, cow, sheep: TSG with top 25% of heads">
+                    <source src="head-selection-animals-top-25.mp4" type="video/mp4">
+                    Your browser does not support embedded video.
+                  </video>
+                </figure>
+              </div>
+              <div class="playback-controls" role="group" aria-label="Playback for Three ordered entries: horse, cow, sheep head selection">
+                <button class="button is-small is-dark" type="button" data-action="play" aria-pressed="false">Play both</button>
+                <button class="button is-small is-light" type="button" data-action="replay">Replay from start</button>
+                <span class="playback-status" role="status" aria-live="polite"></span>
+              </div>
+              <table class="table is-narrow quality-metrics">
+                <caption>VBench quality scores</caption>
+                <thead>
+                  <tr><th scope="col">Metric</th><th scope="col">All heads</th><th scope="col">Top 25%</th></tr>
+                </thead>
+                <tbody>
+                  <tr><th scope="row">Subject consistency</th><td><strong>98.40</strong></td><td>96.88</td></tr>
+                  <tr><th scope="row">Background consistency</th><td><strong>98.33</strong></td><td>97.18</td></tr>
+                  <tr><th scope="row">Aesthetic quality</th><td><strong>54.03</strong></td><td>44.61</td></tr>
+                  <tr class="imaging-quality-row"><th scope="row">Imaging quality</th><td><strong>72.19</strong></td><td>68.12</td></tr>
+                  <tr><th scope="row">Temporal flickering</th><td><strong>99.38</strong></td><td>98.58</td></tr>
+                  <tr><th scope="row">Motion smoothness</th><td><strong>99.55</strong></td><td>98.89</td></tr>
+                  <tr><th scope="row">Dynamic degree</th><td>0.00</td><td><strong>100.00</strong></td></tr>
+                </tbody>
+              </table>
+            </article>
+
+          </section>
         </section>
       </div>
     </div>
